@@ -1,10 +1,9 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from IPython.display import clear_output
-import time
+import pygame
 
 # Размер игрового поля
 grid_size = 10
+cell_size = 50
 
 # Инициализация игрового поля случайными эмоциями
 emotional_grid = np.random.uniform(low=0.0, high=1.0, size=(grid_size, grid_size))
@@ -28,20 +27,30 @@ def game_step(emotional_grid):
 
     return new_emotional_grid
 
-# Функция для отображения игрового поля
-def plot_emotional_grid(emotional_grid):
-    plt.imshow(emotional_grid, cmap='coolwarm', interpolation='nearest', vmin=0.0, vmax=1.0)
-    plt.colorbar()
-    plt.show()
+# Инициализация pygame
+pygame.init()
+screen = pygame.display.set_mode((grid_size * cell_size, grid_size * cell_size))
+clock = pygame.time.Clock()
 
 # Игровой цикл
-for _ in range(10):  # 10 шагов игры
-    # Очистка вывода и отображение текущего состояния игрового поля
-    clear_output(wait=True)
-    plot_emotional_grid(emotional_grid)
-    time.sleep(0.5)  # задержка для создания эффекта анимации
+running = True
+while running:
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
 
+    # Отображение текущего состояния игрового поля
+    for i in range(grid_size):
+        for j in range(grid_size):
+            color = (int(emotional_grid[i, j] * 255), 0, 0)
+            pygame.draw.rect(screen, color, (i * cell_size, j * cell_size, cell_size, cell_size))
+
+    pygame.display.flip()
     emotional_grid = game_step(emotional_grid)
+    clock.tick(2)  # Частота обновления поля (2 раза в секунду)
+
+# Завершение pygame
+pygame.quit()
 
 
 
