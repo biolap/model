@@ -39,7 +39,7 @@ win.show()
 # Создание сцены
 scene = view.addViewBox()
 scene.setAspectLocked(True)
-
+view.setCentralItem(scene)
 # Создание многоугольников на сфере
 polygons = []
 for i in range(grid_size):
@@ -48,8 +48,9 @@ for i in range(grid_size):
         y = j / grid_size
         z = emotional_grid[i, j]
         color = QColor(int(z * 255), int(z * 255), int(z * 255))
-        polygon = pg.QtGui.QGraphicsEllipseItem(x, y, 1 / grid_size, 1 / grid_size)
-        polygon.setBrush(color)
+        polygon = pg.QtWidgets.QGraphicsRectItem(x, y, 1 / grid_size, 1 / grid_size)
+        brush = pg.mkBrush(color)
+        polygon.setBrush(brush)
         scene.addItem(polygon)
         polygons.append(polygon)
 
@@ -63,7 +64,8 @@ def update_polygons():
             polygon = polygons[i * grid_size + j]
             z = emotional_grid[i, j]
             color = QColor(int(z * 255), int(z * 255), int(z * 255))
-            polygon.setBrush(color)
+            brush = pg.mkBrush(color)
+            polygon.setBrush(brush)
 
 # Игровой цикл
 timer = QtCore.QTimer()
@@ -73,4 +75,11 @@ timer.start(1000)  # Частота обновления поля (1 раз в �
 # Запуск приложения
 if __name__ == '__main__':
     app.exec_()
+
+
+
+
+
+
+
 
