@@ -1,14 +1,46 @@
 import numpy as np
-import pyqtgraph as pg
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtGui import QColor
-from pyqtgraph import QtCore
+from PyQt5.QtWidgets import QApplication
+from PyQt5.QtCore import QTimer
+import pyqtgraph.opengl as gl
 
 # Размер игрового поля
-grid_size = 10
+grid_size = 50
 
 # Инициализация игрового поля случайными эмоциями
 emotional_grid = np.random.uniform(low=0.0, high=1.0, size=(grid_size, grid_size))
+
+# Создание приложения Qt
+app = QApplication([])
+
+# Создание трехмерного графика
+view = gl.GLViewWidget()
+view.show()
+view.setWindowTitle('Emotional Sphere')
+
+# Создание сетки для трехмерной сферы
+theta = np.linspace(0, 2 * np.pi, grid_size + 1)
+phi = np.linspace(0, np.pi, grid_size + 1)
+theta, phi = np.meshgrid(theta, phi)
+
+# Преобразование сферических координат в декартовы
+x = np.sin(phi) * np.cos(theta)
+y = np.sin(phi) * np.sin(theta)
+z = np.cos(phi)
+
+# Преобразование координат в одномерные массивы
+x = x.flatten()
+y = y.flatten()
+z = z.flatten()
+
+# Создание объекта для отображения многоугольников
+mesh = gl.GLMeshItem(vertexes=np.vstack([x, y, z]).T, faces=np.arange(len(x)).reshape(grid_size+1, grid_size+1),
+                     shader='shaded', smooth=True)
+
+# Создание массива цветов (RGBA)
+colors = np.zeros((grid_size, grid_size, 4))
+
+# Добавление объекта на сцену
+view.addItem(mesh)
 
 # Функция для применения гомотопии между эмоциями
 def emotional_homotopy(t, emotion1, emotion2):
@@ -29,53 +61,24 @@ def game_step(emotional_grid):
 
     return new_emotional_grid
 
-# Создание сферы
-app = QApplication([])
-win = QMainWindow()
-view = pg.GraphicsLayoutWidget()
-win.setCentralWidget(view)
-win.show()
-
-# Создание сцены
-scene = view.addViewBox()
-scene.setAspectLocked(True)
-view.setCentralItem(scene)
-# Создание многоугольников на сфере
-polygons = []
-for i in range(grid_size):
-    for j in range(grid_size):
-        x = i / grid_size
-        y = j / grid_size
-        z = emotional_grid[i, j]
-        color = QColor(int(z * 255), int(z * 255), int(z * 255))
-        polygon = pg.QtWidgets.QGraphicsRectItem(x, y, 1 / grid_size, 1 / grid_size)
-        brush = pg.mkBrush(color)
-        polygon.setBrush(brush)
-        scene.addItem(polygon)
-        polygons.append(polygon)
-
-# Функция для обновления многоугольников
-def update_polygons():
+# Функция для обновления графика
+def update():
     global emotional_grid
     emotional_grid = game_step(emotional_grid)
 
-    for i in range(grid_size):
-        for j in range(grid_size):
-            polygon = polygons[i * grid_size + j]
-            z = emotional_grid[i, j]
-            color = QColor(int(z * 255), int(z * 255), int(z * 255))
-            brush = pg.mkBrush(color)
-            polygon.setBrush(brush)
+    # Обновление цветов многоугольников
+    colors[:, :, 0] = emotional_grid  # Заполняем красный канал значениями эмоций
+    mesh.setMeshData(vertexes=np.vstack([x, y, z]).T, faces=np.arange(len(x)).reshape(grid_size+1, grid_size+1),
+                     shader='shaded', smooth=True, vertexColors=colors)
 
-# Игровой цикл
-timer = QtCore.QTimer()
-timer.timeout.connect(update_polygons)
+# Таймер для обновления
+timer = QTimer()
+timer.timeout.connect(update)
 timer.start(1000)  # Частота обновления поля (1 раз в секунду)
 
 # Запуск приложения
 if __name__ == '__main__':
-    app.exec_()
-
+    QApplication.instance().exec_()
 
 
 
