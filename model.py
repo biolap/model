@@ -2,7 +2,7 @@ import numpy as np
 import pygame
 
 # Размер игрового поля
-grid_size = 10
+grid_size = 20
 cell_size = 50
 
 # Инициализация игрового поля случайными эмоциями
